@@ -1,0 +1,18 @@
+
+
+ENDPOINT=http://127.0.0.1:3000/destination
+
+ENDPOINT=https://0iuc8ittel.execute-api.us-west-2.amazonaws.com/v1/destination
+
+curl -X GET \
+   -H "Verification-Token: 926b1333-a62b-444b-9546-af7b3af063d3" \
+  $ENDPOINT?challenge=cc2f1bdf-af51-4974-af5c-f3af19d6526c
+
+curl -X POST \
+    -H "Content-Type:application/json" \
+    -d @- -s $ENDPOINT <<EOF
+{
+    "verification-token": "926b1333-a62b-444b-9546-af7b3af063d3",
+    "test": "hi"
+}
+EOF

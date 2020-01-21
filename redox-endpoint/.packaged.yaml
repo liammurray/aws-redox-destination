@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'redox-endpoint
+
+  Sample SAM Template for redox-endpoint
+
+  '
+Parameters:
+  ApiStageName:
+    Type: String
+    AllowedPattern: ^[a-z0-9]+$
+    Default: v1
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: python3.7
+    CodeUri: redox/
+Resources:
+  RedoxDestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName:
+        Ref: ApiStageName
+  EnvFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: info.handler
+      Events:
+        GetEnv:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: RedoxDestApi
+            Path: /env
+            Method: get
+      CodeUri: s3://nod15c.lambda/b81f83fcc9224823d6ec440ead1ca7af
+  TransmissionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: destination.handler_destination
+      Environment:
+        Variables:
+          VERIFICATION_TOKEN: 926b1333-a62b-444b-9546-af7b3af063d3
+      Events:
+        PostTransmission:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: RedoxDestApi
+            Path: /destination
+            Method: POST
+        GetVerification:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: RedoxDestApi
+            Path: /destination
+            Method: GET
+      CodeUri: s3://nod15c.lambda/6549bf2beb4d94e266af66fbe35f3bc6
+  SsoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: sso.handler_sso
+      Environment:
+        Variables:
+          JWT_AUD: 9d37dded-590a-45b2-9d36-df1f30d4b9df
+          JWT_SECRET: 3HjdVasZad5ltsHFFn8eiGwQprkPWu2aVTOQT5vvE5ej2sLRYCDQ3onYimdXBOAPhs5daEJ1
+          REDIRECT_URL: https://ast.wikipedia.org/wiki/Copito_de_Nieve
+      Events:
+        PostSso:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: RedoxDestApi
+            Path: /sso
+            Method: POST
+      CodeUri: s3://nod15c.lambda/1a52e48347f60808cb4a06b2a77a1e4d
+Outputs:
+  ApiId:
+    Description: API Gateway ID
+    Value:
+      Ref: RedoxDestApi
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}:ApiId
+  ApiUrl:
+    Description: API endpoint URL
+    Value:
+      Fn::Sub: https://${RedoxDestApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}/
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}:ApiUrl
